@@ -82,10 +82,6 @@ class TestOverrides(unittest.TestCase):
         self.assertEqual(self.conf.foo3, 3)
 
 
-import unittest
-from pydra.cli import apply_overrides, Config, Alias
-
-
 class NestedConfig(Config):
     def __init__(self):
         self.nested_value = "original"
