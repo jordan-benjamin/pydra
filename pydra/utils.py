@@ -152,3 +152,9 @@ class DataclassWrapper:
 
     def __str__(self) -> str:
         return f"DataclassWrapper({self.d})"
+
+    def __getstate__(self):
+        return {"d": self.d, "dataclass_type": self.dataclass_type}
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
