@@ -98,7 +98,6 @@ def load_binary(path: Path):
 class DataclassWrapper:
     d: dict
     dataclass_type: type
-    required_val: str
 
     def __init__(self, dataclass_type):
         param_dict = {}
@@ -141,9 +140,7 @@ class DataclassWrapper:
         self.d[key] = value
 
     def __deepcopy__(self, memodict={}):
-        new_copy = type(self)(
-            self.dataclass_type, deepcopy(self.required_val, memodict)
-        )
+        new_copy = type(self)(self.dataclass_type)
         new_copy.__dict__["d"] = deepcopy(self.d, memodict)
         return new_copy
 
