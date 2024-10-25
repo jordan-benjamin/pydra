@@ -6,6 +6,7 @@ import pickle
 from dataclasses import fields, MISSING
 
 from copy import deepcopy
+from pydantic import BaseModel
 
 
 class _Required:
@@ -95,38 +96,30 @@ def load_binary(path: Path):
         raise ValueError(f"Unknown extension {path.suffix}")
 
 
-class DataclassWrapper:
+class BaseWrapper[T]:
     d: dict
-    dataclass_type: type
+    wrapped_type: type[T]
 
-    def __init__(self, dataclass_type):
-        param_dict = {}
-        for field in fields(dataclass_type):
-            if field.default is not MISSING:
-                param_dict[field.name] = field.default
-            else:
-                param_dict[field.name] = REQUIRED
-
-        self.__dict__["d"] = param_dict
-        self.__dict__["dataclass_type"] = dataclass_type
+    def __init__(self, wrapped_type: type[T]):
+        raise NotImplementedError
 
     def build(self):
         for k, v in self.d.items():
             if v == REQUIRED:
                 raise ValueError(
-                    f"Missing required key '{k}' when instantiating dataclass {self.dataclass_type}"
+                    f"Missing required key '{k}' when instantiating wrapped type {self.wrapped_type}"
                 )
 
-        config = self.dataclass_type(
-            **self.d,
-        )
+        config = self.wrapped_type(**self.d)
         return config
 
     def __getattr__(self, key: str):
         try:
             return self.d[key]
         except KeyError:
-            raise AttributeError(f"DataclassWrapper has no attribute '{key}'")
+            raise AttributeError(
+                f"{self.wrapped_type.__name__} has no attribute '{key}'"
+            )
 
     def __getitem__(self, key):
         return self.d[key]
@@ -140,18 +133,48 @@ class DataclassWrapper:
         self.d[key] = value
 
     def __deepcopy__(self, memodict={}):
-        new_copy = type(self)(self.dataclass_type)
+        new_copy = type(self)(self.wrapped_type)
         new_copy.__dict__["d"] = deepcopy(self.d, memodict)
         return new_copy
 
     def __repr__(self) -> str:
-        return f"DataclassWrapper({self.d})"
+        return f"{self.wrapped_type.__name__}({self.d})"
 
     def __str__(self) -> str:
-        return f"DataclassWrapper({self.d})"
+        return f"{self.wrapped_type.__name__}({self.d})"
 
     def __getstate__(self):
-        return {"d": self.d, "dataclass_type": self.dataclass_type}
+        return {"d": self.d, "wrapped_type": self.wrapped_type}
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+
+
+class DataclassWrapper[T](BaseWrapper[T]):
+    def __init__(self, wrapped_type: type[T]):
+        param_dict = {}
+        for field in fields(wrapped_type):
+            if field.default is not MISSING:
+                param_dict[field.name] = field.default
+            elif field.default_factory is not MISSING:
+                param_dict[field.name] = field.default_factory()
+            else:
+                param_dict[field.name] = REQUIRED
+
+        self.__dict__["d"] = param_dict
+        self.__dict__["wrapped_type"] = wrapped_type
+
+
+class PydanticWrapper[T: BaseModel](BaseWrapper[T]):
+    def __init__(self, wrapped_type: type[T]):
+        param_dict = {}
+        for field_name, field_info in wrapped_type.model_fields.items():
+            if field_info.default is not None:
+                param_dict[field_name] = field_info.default
+            elif field_info.default_factory is not None:
+                param_dict[field_name] = field_info.default_factory()
+            else:
+                param_dict[field_name] = REQUIRED
+
+        self.__dict__["d"] = param_dict
+        self.__dict__["wrapped_type"] = wrapped_type

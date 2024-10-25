@@ -9,4 +9,5 @@ from pydra.utils import (
     save_pickle,
     save_yaml,
     DataclassWrapper,
+    PydanticWrapper,
 )
