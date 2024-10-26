@@ -113,6 +113,31 @@ class BaseWrapper[T]:
         config = self.wrapped_type(**self.d)
         return config
 
+    def spoof(self) -> T:
+        """
+        This is a hack for IDE type checking, allowing us
+        to assign to fields in this wrapper class as if it
+        was an instance of the wrapped type.
+        """
+        return self  # type: ignore
+
+    def __deepcopy__(self, memodict={}):
+        new_copy = type(self)(self.wrapped_type)
+        new_copy.__dict__["d"] = deepcopy(self.d, memodict)
+        return new_copy
+
+    def __repr__(self) -> str:
+        return f"{self.wrapped_type.__name__}({self.d})"
+
+    def __str__(self) -> str:
+        return f"{self.wrapped_type.__name__}({self.d})"
+
+    def __getstate__(self):
+        return {"d": self.d, "wrapped_type": self.wrapped_type}
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def __getattr__(self, key: str):
         try:
             return self.d[key]
@@ -131,23 +156,6 @@ class BaseWrapper[T]:
         if key not in self.d:
             raise ValueError(f"Trying to assign key that doesn't exist: '{key}'")
         self.d[key] = value
-
-    def __deepcopy__(self, memodict={}):
-        new_copy = type(self)(self.wrapped_type)
-        new_copy.__dict__["d"] = deepcopy(self.d, memodict)
-        return new_copy
-
-    def __repr__(self) -> str:
-        return f"{self.wrapped_type.__name__}({self.d})"
-
-    def __str__(self) -> str:
-        return f"{self.wrapped_type.__name__}({self.d})"
-
-    def __getstate__(self):
-        return {"d": self.d, "wrapped_type": self.wrapped_type}
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
 
 
 class DataclassWrapper[T](BaseWrapper[T]):
