@@ -1,18 +1,18 @@
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Any
 
 
 @dataclass
 class KeyValuePair:
     key: str
-    value: any
+    value: Any
 
 
 @dataclass
 class MethodCall:
     method_name: str
     args: list = field(default_factory=list)
-    kwargs: dict[str, any] = field(default_factory=dict)
+    kwargs: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
