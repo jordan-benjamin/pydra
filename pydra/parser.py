@@ -75,7 +75,7 @@ def parse_kv_pair(kv_pair_arg: str, scope: list[str]) -> KeyValuePair:
     """Parse a string of the form 'key=value'"""
     try:
         key, value = kv_pair_arg.split("=")
-    except:
+    except ValueError:
         raise ValueError(f"Couldn't parse {kv_pair_arg}")
     return KeyValuePair(scope_key(scope=scope, key=key), value=parse_value(value))
 

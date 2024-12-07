@@ -21,9 +21,15 @@ def assign(obj, key: str, value, assert_exists: bool = True):
         cur_obj = obj_path[-1]
 
         if isinstance(cur_obj, dict):
-            has_func = lambda o, k: k in o
-            get_func = lambda o, k: o[k]
-            set_func = lambda o, k, v: o.update({k: v})
+
+            def has_func(o, k):
+                return k in o
+
+            def get_func(o, k):
+                return o[k]
+
+            def set_func(o, k, v):
+                o.update({k: v})
         else:
             has_func = hasattr
             get_func = getattr
@@ -53,7 +59,6 @@ def apply_overrides(
     enforce_required: bool = True,
     finalize: bool = True,
 ) -> bool:
-
     parsed_args = pydra.parser.parse(args)
 
     for command in parsed_args.commands:
@@ -81,7 +86,6 @@ def apply_overrides(
 # makes the decorator
 def main(base: type[Config]):
     def decorator(fn):
-
         def wrapped_fn(config: Optional[Config] = None):
             # allow other scripts to call the wrapped function directly
             if config is not None:
