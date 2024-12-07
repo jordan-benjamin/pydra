@@ -10,7 +10,6 @@ from pydra.parser import (
 
 
 class TestParseFunction(unittest.TestCase):
-
     def test_empty_args(self):
         args = []
         result = parse(args)
