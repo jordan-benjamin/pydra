@@ -28,3 +28,5 @@ __all__ = [
     "DataclassWrapper",
     "PydanticWrapper",
 ]
+
+__version__ = "0.0.6"
