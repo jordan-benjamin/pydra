@@ -44,9 +44,21 @@ def isint(value: str):
         return False
 
 
+def is_string_literal(value: str):
+    for char in ['"', "'"]:
+        if value.startswith(char) and value.endswith(char):
+            return True
+    return False
+
+
+def drop_first_last(value: str):
+    return value[1:-1]
+
+
 def parse_value(value: str):
-    # convert value to int or float if possible
-    if isint(value):
+    if is_string_literal(value):
+        return drop_first_last(value)
+    elif isint(value):
         return int(value)
     elif isfloat(value):
         return float(value)
@@ -57,9 +69,9 @@ def parse_value(value: str):
     elif value in ["F", "False"]:
         return False
     elif value.startswith("[") and value.endswith("]"):
-        return [parse_value(x) for x in value[1:-1].split(",")]
+        return [parse_value(x) for x in drop_first_last(value).split(",")]
     elif value.startswith("(") and value.endswith(")"):
-        sliced = value[1:-1]
+        sliced = drop_first_last(value)
         return eval(sliced)
     else:
         return value

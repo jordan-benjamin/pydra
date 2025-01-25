@@ -35,6 +35,19 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_string_literal(self):
+        args = ['key="4"']
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value="4"), assert_exists=True
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
     def test_integer_value_assignment(self):
         args = ["key=123"]
         result = parse(args)
