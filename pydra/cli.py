@@ -1,11 +1,12 @@
+import inspect
 import sys
+from dataclasses import dataclass
+from typing import Callable
+
 import yaml
 
-from dataclasses import dataclass
-
-from typing import Optional
-from pydra.config import Config
 import pydra.parser
+from pydra.config import Config
 
 
 @dataclass
@@ -92,26 +93,46 @@ def apply_overrides(
     return parsed_args.show
 
 
-# makes the decorator
-def main(base: type[Config]):
-    def decorator(fn):
-        def wrapped_fn(config: Optional[Config] = None):
-            # allow other scripts to call the wrapped function directly
-            if config is not None:
-                return fn(config)
+def _apply_overrides_and_call[T: Config, U](
+    fn: Callable[[T], U], config_t: type[T], args: list[str] | None = None
+):
+    config = config_t()
 
-            args = sys.argv[1:]
+    if args is None:
+        args = sys.argv[1:]
 
-            config = base()
+    show = apply_overrides(config, args, finalize=True)
 
-            show = apply_overrides(config, args, finalize=True)
+    if show:
+        print(yaml.dump(config.to_dict(), sort_keys=True))
+        return
 
-            if show:
-                print(yaml.dump(config.to_dict(), sort_keys=True))
-                return
+    return fn(config)
 
-            return fn(config)
+
+def main[T: Config, U](base: type[T]):
+    def decorator(fn: Callable[[T], U]):
+        def wrapped_fn(args: list[str] | None = None):
+            return _apply_overrides_and_call(fn, base, args)
 
         return wrapped_fn
 
     return decorator
+
+
+def run[T: Config, U](fn: Callable[[T], U], args: list[str] | None = None):
+    signature = inspect.signature(fn)
+    params = signature.parameters
+
+    if len(params) != 1:
+        raise ValueError(f"Function '{fn}' must take in one argument")
+
+    first_arg_type = list(params.values())[0].annotation
+
+    # assert arg is instance of Config
+    if not issubclass(first_arg_type, Config):
+        raise ValueError(
+            f"Type annotation of function argument must be a subclass of Config, but got {first_arg_type}"
+        )
+
+    return _apply_overrides_and_call(fn, first_arg_type, args)

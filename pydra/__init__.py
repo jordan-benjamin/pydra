@@ -1,4 +1,4 @@
-from pydra.cli import main, apply_overrides, Alias
+from pydra.cli import main, run, apply_overrides, Alias
 from pydra.config import Config, REQUIRED
 from pydra.utils import (
     load_dill,
@@ -14,6 +14,7 @@ from pydra.utils import (
 
 __all__ = [
     "main",
+    "run",
     "apply_overrides",
     "Alias",
     "Config",
