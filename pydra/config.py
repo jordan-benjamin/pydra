@@ -1,8 +1,28 @@
 from pydra.utils import save_yaml, save_dill, save_pickle, DataclassWrapper, REQUIRED
 from pathlib import Path
+import inspect
 
 
 class Config:
+    def _init_annotations(self):
+        cls = self.__class__
+        # get the class' type annotations
+        annotations = inspect.get_annotations(cls)
+
+        for name, _ in annotations.items():
+            init_value = getattr(cls, name, REQUIRED)
+            setattr(self, name, init_value)
+
+    def _assign_maybe_cast(self, key: str, value):
+        annotations = inspect.get_annotations(self.__class__)
+        if ann_type := annotations.get(key):
+            value = ann_type(value)
+
+        setattr(self, key, value)
+
+    def finalize(self):
+        pass
+
     def to_dict(self):
         data = {}
 
@@ -49,6 +69,3 @@ class Config:
                 for k2, v2 in v.items():
                     if isinstance(v2, Config):
                         v2._enforce_required()
-
-    def finalize(self):
-        pass

@@ -20,20 +20,25 @@ def assign(obj, key: str, value, assert_exists: bool = True):
     for i, k in enumerate(split_dots):
         cur_obj = obj_path[-1]
 
-        if isinstance(cur_obj, dict):
-
-            def has_func(o, k):
+        def has_func(o, k):
+            if isinstance(o, dict):
                 return k in o
+            else:
+                return hasattr(o, k)
 
-            def get_func(o, k):
+        def get_func(o, k):
+            if isinstance(o, dict):
                 return o[k]
+            else:
+                return getattr(o, k)
 
-            def set_func(o, k, v):
-                o.update({k: v})
-        else:
-            has_func = hasattr
-            get_func = getattr
-            set_func = setattr
+        def set_func(o, k, v):
+            if isinstance(o, dict):
+                o[k] = v
+            elif isinstance(o, Config):
+                o._assign_maybe_cast(k, v)
+            else:
+                setattr(o, k, v)
 
         if has_func(cur_obj, k):
             next_obj = get_func(cur_obj, k)
@@ -56,9 +61,13 @@ def assign(obj, key: str, value, assert_exists: bool = True):
 def apply_overrides(
     config: Config,
     args: list[str],
+    init_annotations: bool = True,
     enforce_required: bool = True,
     finalize: bool = True,
 ) -> bool:
+    if init_annotations:
+        config._init_annotations()
+
     parsed_args = pydra.parser.parse(args)
 
     for command in parsed_args.commands:
