@@ -1,6 +1,8 @@
 from pydra.utils import save_yaml, save_dill, save_pickle, DataclassWrapper, REQUIRED
 from pathlib import Path
 import inspect
+from types import UnionType, NoneType
+from typing import get_args, get_origin, Union
 
 
 class Config:
@@ -16,7 +18,23 @@ class Config:
     def _assign_maybe_cast(self, key: str, value):
         annotations = inspect.get_annotations(self.__class__)
         if ann_type := annotations.get(key):
-            value = ann_type(value)
+            # handling for the optionals of the form Optional[T] or T | None
+            if get_origin(ann_type) in [Union, UnionType]:
+                type_args = get_args(ann_type)
+                if len(type_args) != 2 or type_args[1] != NoneType:
+                    raise ValueError(
+                        f"Can only support union types of the form Optional[T] or T | None, but got '{ann_type}'"
+                    )
+
+                inner_type = type_args[0]
+
+                if value is None:
+                    pass
+                else:
+                    value = inner_type(value)
+
+            else:
+                value = ann_type(value)
 
         setattr(self, key, value)
 
