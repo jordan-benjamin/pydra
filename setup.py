@@ -18,11 +18,11 @@ if __name__ == "__main__":
         install_requires=requirements_lines,
         long_description=long_description,
         long_description_content_type="text/markdown",
-        python_requires=">=3.12",
+        python_requires=">=3.10",
         classifiers=[
             "Development Status :: 3 - Alpha",
             "Intended Audience :: Developers",
-            "Programming Language :: Python :: 3.12",
+            "Programming Language :: Python :: 3.10",
         ],
         license="Apache License 2.0",
         include_package_data=True,
