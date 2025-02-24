@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Generic, TypeVar
 import yaml
 import dill
 import pickle
@@ -95,8 +96,9 @@ def load_binary(path: Path):
     else:
         raise ValueError(f"Unknown extension {path.suffix}")
 
+T = TypeVar("T")
 
-class BaseWrapper[T]:
+class BaseWrapper(Generic[T]):
     d: dict
     wrapped_type: type[T]
 
@@ -158,7 +160,7 @@ class BaseWrapper[T]:
         self.d[key] = value
 
 
-class DataclassWrapper[T](BaseWrapper[T]):
+class DataclassWrapper(BaseWrapper[T]):
     def __init__(self, wrapped_type: type[T]):
         param_dict = {}
         for field in fields(wrapped_type):
@@ -173,7 +175,8 @@ class DataclassWrapper[T](BaseWrapper[T]):
         self.__dict__["wrapped_type"] = wrapped_type
 
 
-class PydanticWrapper[T: BaseModel](BaseWrapper[T]):
+T = TypeVar("T", bound=BaseModel)
+class PydanticWrapper(BaseWrapper[T]):
     def __init__(self, wrapped_type: type[T]):
         param_dict = {}
         for field_name, field_info in wrapped_type.model_fields.items():

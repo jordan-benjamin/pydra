@@ -1,7 +1,7 @@
 import inspect
 import sys
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Type, TypeVar
 
 import yaml
 
@@ -92,9 +92,13 @@ def apply_overrides(
 
     return parsed_args.show
 
+# SE (02/24/25): Using the old generic class syntax for compatibility with Python <3.12
+T = TypeVar("T", bound=Config)
+U = TypeVar("U")
 
-def _apply_overrides_and_call[T: Config, U](
-    fn: Callable[[T], U], config_t: type[T], args: list[str] | None = None
+
+def _apply_overrides_and_call(
+    fn: Callable[[T], U], config_t: Type[T], args: list[str] | None = None
 ):
     config = config_t()
 
@@ -110,7 +114,7 @@ def _apply_overrides_and_call[T: Config, U](
     return fn(config)
 
 
-def main[T: Config, U](base: type[T]):
+def main(base: Type[T]):
     def decorator(fn: Callable[[T], U]):
         def wrapped_fn(args: list[str] | None = None):
             return _apply_overrides_and_call(fn, base, args)
@@ -120,7 +124,7 @@ def main[T: Config, U](base: type[T]):
     return decorator
 
 
-def run[T: Config, U](fn: Callable[[T], U], args: list[str] | None = None):
+def run(fn: Callable[[T], U], args: list[str] | None = None):
     signature = inspect.signature(fn)
     params = signature.parameters
 
