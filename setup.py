@@ -1,5 +1,6 @@
-from setuptools import setup
 from pathlib import Path
+
+from setuptools import setup
 
 if __name__ == "__main__":
     requirements_path = Path(__file__).parent / "requirements.txt"
@@ -10,7 +11,7 @@ if __name__ == "__main__":
 
     setup(
         name="pydra-config",
-        version="0.0.9",
+        version="0.0.10",
         packages=["pydra"],
         author="Jordan Juravsky",
         url="https://github.com/jordan-benjamin/pydra",

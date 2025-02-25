@@ -92,6 +92,7 @@ def apply_overrides(
 
     return parsed_args.show
 
+
 # SE (02/24/25): Using the old generic class syntax for compatibility with Python <3.12
 T = TypeVar("T", bound=Config)
 U = TypeVar("U")

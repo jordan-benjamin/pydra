@@ -96,7 +96,9 @@ def load_binary(path: Path):
     else:
         raise ValueError(f"Unknown extension {path.suffix}")
 
+
 T = TypeVar("T")
+
 
 class BaseWrapper(Generic[T]):
     d: dict
@@ -176,6 +178,8 @@ class DataclassWrapper(BaseWrapper[T]):
 
 
 T = TypeVar("T", bound=BaseModel)
+
+
 class PydanticWrapper(BaseWrapper[T]):
     def __init__(self, wrapped_type: type[T]):
         param_dict = {}

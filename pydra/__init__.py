@@ -1,15 +1,15 @@
-from pydra.cli import main, run, apply_overrides, Alias
-from pydra.config import Config, REQUIRED
+from pydra.cli import Alias, apply_overrides, main, run
+from pydra.config import REQUIRED, Config
 from pydra.utils import (
+    DataclassWrapper,
+    PydanticWrapper,
+    load_binary,
     load_dill,
     load_pickle,
     load_yaml,
-    load_binary,
     save_dill,
     save_pickle,
     save_yaml,
-    DataclassWrapper,
-    PydanticWrapper,
 )
 
 __all__ = [
@@ -30,4 +30,4 @@ __all__ = [
     "PydanticWrapper",
 ]
 
-__version__ = "0.0.9"
+__version__ = "0.0.10"
