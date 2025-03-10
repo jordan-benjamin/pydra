@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Union, Any
+from typing import Any, Union
 
 
 @dataclass
@@ -69,7 +69,12 @@ def parse_value(value: str):
     elif value in ["F", "False"]:
         return False
     elif value.startswith("[") and value.endswith("]"):
-        return [parse_value(x) for x in drop_first_last(value).split(",")]
+        between_brackets = drop_first_last(value)
+
+        if len(between_brackets) == 0:
+            return []
+        else:
+            return [parse_value(x) for x in between_brackets.split(",")]
     elif value.startswith("(") and value.endswith(")"):
         sliced = drop_first_last(value)
         return eval(sliced)

@@ -1,11 +1,11 @@
 import unittest
 
 from pydra.parser import (
-    parse,
-    ParseResult,
     Assignment,
     KeyValuePair,
     MethodCall,
+    ParseResult,
+    parse,
 )
 
 
@@ -100,6 +100,46 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_string_literal_assignment(self):
+        args = ['key="0"']
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value="0"), assert_exists=True
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
+    def test_list_assignment(self):
+        args = ['key=[1,hi,"3"]']
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]),
+                    assert_exists=True,
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
+    def test_empty_list_assignment(self):
+        args = ["key=[]"]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value=[]), assert_exists=True
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
     def test_python_expression_assignment(self):
         args = ["key=(1+2)"]
         result = parse(args)
@@ -159,7 +199,7 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
-    def test_list_assignment(self):
+    def test_dashed_list_assignment(self):
         args = ["--list", "key", "value1", "value2", "list--"]
         result = parse(args)
         expected = ParseResult(
