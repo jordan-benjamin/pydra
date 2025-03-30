@@ -1,13 +1,15 @@
-from pathlib import Path
-from typing import Generic, TypeVar
-import yaml
-import dill
 import pickle
-
-from dataclasses import fields, MISSING
-
 from copy import deepcopy
+from dataclasses import MISSING, fields
+from pathlib import Path
+from typing import TYPE_CHECKING, Generic, TypeVar
+
+import dill
+import yaml
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 
 class _Required:
@@ -162,8 +164,8 @@ class BaseWrapper(Generic[T]):
         self.d[key] = value
 
 
-class DataclassWrapper(BaseWrapper[T]):
-    def __init__(self, wrapped_type: type[T]):
+class DataclassWrapper(BaseWrapper):
+    def __init__(self, wrapped_type: type["DataclassInstance"]):
         param_dict = {}
         for field in fields(wrapped_type):
             if field.default is not MISSING:
