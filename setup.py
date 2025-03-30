@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     setup(
         name="pydra-config",
-        version="0.0.11",
+        version="0.0.12",
         packages=["pydra"],
         author="Jordan Juravsky",
         url="https://github.com/jordan-benjamin/pydra",
