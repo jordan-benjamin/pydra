@@ -1,7 +1,8 @@
 import unittest
-import pydra
-from typing import Optional
 from pathlib import Path
+from typing import Optional
+
+import pydra
 
 
 class DoubleInt:
@@ -21,7 +22,10 @@ class ConfigWithAnnotations(pydra.Config):
 
 class ConfigWithOptional(pydra.Config):
     opt1: Optional[Path]
-    opt2: Path | None = Path("foo")
+
+
+class DerivedConfigWithOptional(ConfigWithOptional):
+    opt2: Path | None = None
 
 
 class TestAnnotations(unittest.TestCase):
@@ -43,11 +47,11 @@ class TestAnnotations(unittest.TestCase):
             pydra.apply_overrides(config, ["a=5.2", "c=7.0"])
 
     def test_optional_annotations(self):
-        config = ConfigWithOptional()
+        config = DerivedConfigWithOptional()
         pydra.apply_overrides(config, ["opt1=hi", "opt2=bye"])
         self.assertEqual(config.opt1, Path("hi"))
         self.assertEqual(config.opt2, Path("bye"))
 
-        pydra.apply_overrides(config, ["opt1=None", "opt2=None"])
-        self.assertIsNone(config.opt1)
+        pydra.apply_overrides(config, ["opt1=foo", "opt2=None"])
+        self.assertEqual(config.opt1, Path("foo"))
         self.assertIsNone(config.opt2)
