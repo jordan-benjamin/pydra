@@ -1,22 +1,33 @@
-from pydra.utils import save_yaml, save_dill, save_pickle, DataclassWrapper, REQUIRED
-from pathlib import Path
 import inspect
-from types import UnionType, NoneType
-from typing import get_args, get_origin, Union
+from pathlib import Path
+from types import NoneType, UnionType
+from typing import Union, get_args, get_origin
+
+from pydra.utils import REQUIRED, DataclassWrapper, save_dill, save_pickle, save_yaml
+
+
+def get_annotations(cls: type) -> dict:
+    anns = {}
+    classes = list(reversed(cls.__mro__))
+
+    for c in classes:
+        anns.update(inspect.get_annotations(c))
+
+    return anns
 
 
 class Config:
     def _init_annotations(self):
         cls = self.__class__
         # get the class' type annotations
-        annotations = inspect.get_annotations(cls)
+        annotations = get_annotations(cls)
 
         for name, _ in annotations.items():
             init_value = getattr(cls, name, REQUIRED)
             setattr(self, name, init_value)
 
     def _assign_maybe_cast(self, key: str, value):
-        annotations = inspect.get_annotations(self.__class__)
+        annotations = get_annotations(self.__class__)
         if ann_type := annotations.get(key):
             # handling for the optionals of the form Optional[T] or T | None
             if get_origin(ann_type) in [Union, UnionType]:
