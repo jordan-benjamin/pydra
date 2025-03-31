@@ -164,6 +164,19 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_equals_in_value(self):
+        args = ["key=a=b"]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value="a=b"), assert_exists=True
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
     def test_method_call_no_args(self):
         args = [".method"]
         result = parse(args)
