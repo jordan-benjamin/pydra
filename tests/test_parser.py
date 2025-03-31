@@ -35,6 +35,24 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_misparse_key(self):
+        args = ["key"]
+        with self.assertRaises(ValueError):
+            parse(args)
+
+    def test_empty_value(self):
+        args = ["key="]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[
+                Assignment(
+                    kv_pair=KeyValuePair(key="key", value=""), assert_exists=True
+                )
+            ],
+        )
+        self.assertEqual(result, expected)
+
     def test_string_literal(self):
         args = ['key="4"']
         result = parse(args)
