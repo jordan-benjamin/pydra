@@ -17,6 +17,7 @@ class ConfigWithAnnotations(pydra.Config):
     c: float = 6.0
 
     def __init__(self):
+        super().__init__()
         self.d = "hi"
 
 
@@ -26,6 +27,15 @@ class ConfigWithOptional(pydra.Config):
 
 class DerivedConfigWithOptional(ConfigWithOptional):
     opt2: Path | None = None
+
+
+class ConfigWithAnnotationsAndInit(pydra.Config):
+    a: int = 4
+    b: int = 1
+
+    def __init__(self):
+        super().__init__()
+        self.a = 5
 
 
 class TestAnnotations(unittest.TestCase):
@@ -55,3 +65,9 @@ class TestAnnotations(unittest.TestCase):
         pydra.apply_overrides(config, ["opt1=foo", "opt2=None"])
         self.assertEqual(config.opt1, Path("foo"))
         self.assertIsNone(config.opt2)
+
+    def test_annotations_and_init(self):
+        config = ConfigWithAnnotationsAndInit()
+        pydra.apply_overrides(config, ["b=2"])
+        self.assertEqual(config.a, 5)
+        self.assertEqual(config.b, 2)
