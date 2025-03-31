@@ -16,7 +16,14 @@ def get_annotations(cls: type) -> dict:
     return anns
 
 
+ANNOTATIONS_INITIALIZED = "_annotations_initialized"
+
+
 class Config:
+    def __init__(self):
+        self._init_annotations()
+        setattr(self, ANNOTATIONS_INITIALIZED, True)
+
     def _init_annotations(self):
         cls = self.__class__
         # get the class' type annotations
@@ -28,6 +35,12 @@ class Config:
 
     def _assign_maybe_cast(self, key: str, value):
         annotations = get_annotations(self.__class__)
+
+        if len(annotations) > 0 and not getattr(self, ANNOTATIONS_INITIALIZED, False):
+            raise ValueError(
+                "Config.__init__() must be called (e.g. with super().__init__()) when config has type annotations"
+            )
+
         if ann_type := annotations.get(key):
             # handling for the optionals of the form Optional[T] or T | None
             if get_origin(ann_type) in [Union, UnionType]:
@@ -72,6 +85,7 @@ class Config:
             else:
                 data[k] = str(v)
 
+        data.pop(ANNOTATIONS_INITIALIZED, None)
         return data
 
     def save_yaml(self, path: Path):

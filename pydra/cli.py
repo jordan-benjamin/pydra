@@ -62,13 +62,9 @@ def assign(obj, key: str, value, assert_exists: bool = True):
 def apply_overrides(
     config: Config,
     args: list[str],
-    init_annotations: bool = True,
     enforce_required: bool = True,
     finalize: bool = True,
 ) -> bool:
-    if init_annotations:
-        config._init_annotations()
-
     parsed_args = pydra.parser.parse(args)
 
     for command in parsed_args.commands:
