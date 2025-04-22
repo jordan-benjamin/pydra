@@ -76,11 +76,6 @@ class TestOverrides(unittest.TestCase):
         with self.assertRaises(AttributeError):
             apply_overrides(self.conf, args)
 
-    def test_field_addition(self):
-        args = ["+foo3=3"]
-        apply_overrides(self.conf, args)
-        self.assertEqual(self.conf.foo3, 3)
-
 
 class NestedConfig(Config):
     def __init__(self):
@@ -257,9 +252,21 @@ class TestRequiredConfig(unittest.TestCase):
         self.assertEqual(self.conf.final_val, 11)
 
 
+class FurtherInnerConfig(Config):
+    x: int = 10
+    y: int = 20
+
+    def further_inner_method(self):
+        self.x = 11
+
+
 class InnerConfig(Config):
     a: int = 1
     b: int = 2
+
+    def __init__(self):
+        super().__init__()
+        self.further_inner = FurtherInnerConfig()
 
     def inner_method(self):
         self.a = 3
@@ -276,8 +283,12 @@ class TestNestedConfig(unittest.TestCase):
         self.conf = OuterConfig()
 
     def test_nested_methods(self):
-        apply_overrides(self.conf, [".inner.inner_method"])
+        apply_overrides(
+            self.conf,
+            [".inner.inner_method", ".inner.further_inner.further_inner_method"],
+        )
         self.assertEqual(self.conf.inner.a, 3)
+        self.assertEqual(self.conf.inner.further_inner.x, 11)
 
 
 if __name__ == "__main__":

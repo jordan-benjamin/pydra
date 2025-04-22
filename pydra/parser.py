@@ -18,7 +18,6 @@ class MethodCall:
 @dataclass
 class Assignment:
     kv_pair: KeyValuePair
-    assert_exists: bool
 
 
 @dataclass
@@ -121,11 +120,7 @@ def parse(args) -> ParseResult:
                 list_args.append(parse_value(args[index]))
                 index += 1
 
-            commands.append(
-                Assignment(
-                    kv_pair=KeyValuePair(key=key, value=list_args), assert_exists=True
-                )
-            )
+            commands.append(Assignment(kv_pair=KeyValuePair(key=key, value=list_args)))
 
         elif arg == "--in":
             current_scope.append(args[index + 1])
@@ -163,14 +158,9 @@ def parse(args) -> ParseResult:
                 )
 
         else:
-            assert_exists = True
-            if arg.startswith("+"):
-                assert_exists = False
-                arg = arg[1:]
             commands.append(
                 Assignment(
                     kv_pair=parse_kv_pair(arg, current_scope),
-                    assert_exists=assert_exists,
                 )
             )
 

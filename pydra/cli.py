@@ -14,7 +14,7 @@ class Alias:
     name: str
 
 
-def assign(obj, key: str, value, assert_exists: bool = True):
+def drill_through_objects(obj, key: str):
     split_dots = key.split(".")
 
     obj_path = [obj]
@@ -33,30 +33,34 @@ def assign(obj, key: str, value, assert_exists: bool = True):
             else:
                 return getattr(o, k)
 
-        def set_func(o, k, v):
-            if isinstance(o, dict):
-                o[k] = v
-            elif isinstance(o, Config):
-                o._assign_maybe_cast(k, v)
-            else:
-                setattr(o, k, v)
-
         if has_func(cur_obj, k):
             next_obj = get_func(cur_obj, k)
             if isinstance(next_obj, Alias):
                 k = next_obj.name
 
+        if not has_func(cur_obj, k):
+            raise AttributeError(
+                f"Config does not have attribute '{key}' (failed at '{'.'.join(split_dots[:i + 1])}')"
+            )
+
         # at our destination
         if i == len(split_dots) - 1:
-            if assert_exists and not has_func(cur_obj, k):
-                raise AttributeError(f"Config does not have attribute {key}")
-
-            set_func(cur_obj, k, value)
+            return cur_obj, k
         else:
-            if not assert_exists and not has_func(cur_obj, k):
-                set_func(cur_obj, k, {})
             new_obj = get_func(cur_obj, k)
             obj_path.append(new_obj)
+
+
+def assign(obj, key: str, value):
+    drilled_obj, k = drill_through_objects(obj, key)
+
+    match drilled_obj:
+        case dict():
+            drilled_obj[k] = value
+        case Config():
+            drilled_obj._assign_maybe_cast(k, value)
+        case _:
+            setattr(drilled_obj, k, value)
 
 
 def apply_overrides(
@@ -73,10 +77,13 @@ def apply_overrides(
                 config,
                 command.kv_pair.key,
                 command.kv_pair.value,
-                assert_exists=command.assert_exists,
             )
         elif isinstance(command, pydra.parser.MethodCall):
-            getattr(config, command.method_name)(*command.args, **command.kwargs)
+            drilled_obj, drilled_method_name = drill_through_objects(
+                config, command.method_name
+            )
+            method = getattr(drilled_obj, drilled_method_name)
+            method(*command.args, **command.kwargs)
         else:
             raise ValueError(f"Unknown command type {command}")
 

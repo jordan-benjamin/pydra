@@ -27,11 +27,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value="value"), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value="value"))],
         )
         self.assertEqual(result, expected)
 
@@ -45,11 +41,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=""), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=""))],
         )
         self.assertEqual(result, expected)
 
@@ -58,11 +50,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value="4"), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value="4"))],
         )
         self.assertEqual(result, expected)
 
@@ -71,11 +59,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=123), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=123))],
         )
         self.assertEqual(result, expected)
 
@@ -84,11 +68,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=123.456), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=123.456))],
         )
         self.assertEqual(result, expected)
 
@@ -97,11 +77,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=True), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=True))],
         )
         self.assertEqual(result, expected)
 
@@ -110,11 +86,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=False), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=False))],
         )
         self.assertEqual(result, expected)
 
@@ -123,11 +95,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value="0"), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value="0"))],
         )
         self.assertEqual(result, expected)
 
@@ -137,10 +105,7 @@ class TestParseFunction(unittest.TestCase):
         expected = ParseResult(
             show=False,
             commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]),
-                    assert_exists=True,
-                )
+                Assignment(kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]))
             ],
         )
         self.assertEqual(result, expected)
@@ -150,11 +115,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=[]), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=[]))],
         )
         self.assertEqual(result, expected)
 
@@ -163,9 +124,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(kv_pair=KeyValuePair(key="key", value=3), assert_exists=True)
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=3))],
         )
         self.assertEqual(result, expected)
 
@@ -174,11 +133,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=None), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=None))],
         )
         self.assertEqual(result, expected)
 
@@ -187,11 +142,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value="a=b"), assert_exists=True
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value="a=b"))],
         )
         self.assertEqual(result, expected)
 
@@ -221,12 +172,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope.key", value="value"),
-                    assert_exists=True,
-                )
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="scope.key", value="value"))],
         )
         self.assertEqual(result, expected)
 
@@ -236,23 +182,7 @@ class TestParseFunction(unittest.TestCase):
         expected = ParseResult(
             show=False,
             commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value=["value1", "value2"]),
-                    assert_exists=True,
-                )
-            ],
-        )
-        self.assertEqual(result, expected)
-
-    def test_assert_not_exists(self):
-        args = ["+key=value"]
-        result = parse(args)
-        expected = ParseResult(
-            show=False,
-            commands=[
-                Assignment(
-                    kv_pair=KeyValuePair(key="key", value="value"), assert_exists=False
-                )
+                Assignment(kv_pair=KeyValuePair(key="key", value=["value1", "value2"]))
             ],
         )
         self.assertEqual(result, expected)
@@ -280,7 +210,6 @@ class TestParseFunction(unittest.TestCase):
             "val1",
             "val2",
             "list--",
-            "+key10=value10",
             ".method(arg1=val1,arg2=789)",
         ]
 
@@ -289,46 +218,17 @@ class TestParseFunction(unittest.TestCase):
             show=True,
             commands=[
                 MethodCall(method_name="foo"),
+                Assignment(kv_pair=KeyValuePair(key="scope1.key1", value="value1")),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key2", value=123)),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key3", value=45.67)),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key4", value=True)),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key5", value=None)),
                 Assignment(
-                    kv_pair=KeyValuePair(key="scope1.key1", value="value1"),
-                    assert_exists=True,
+                    kv_pair=KeyValuePair(key="scope1.scope2.key6", value=[1, 2, 3])
                 ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key2", value=123),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key3", value=45.67),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key4", value=True),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key5", value=None),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key6", value=[1, 2, 3]),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key7", value=9),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.key8", value=False),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="key9", value=["val1", "val2"]),
-                    assert_exists=True,
-                ),
-                Assignment(
-                    kv_pair=KeyValuePair(key="key10", value="value10"),
-                    assert_exists=False,
-                ),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key7", value=9)),
+                Assignment(kv_pair=KeyValuePair(key="scope1.key8", value=False)),
+                Assignment(kv_pair=KeyValuePair(key="key9", value=["val1", "val2"])),
                 MethodCall(method_name="method", kwargs={"arg1": "val1", "arg2": 789}),
             ],
         )

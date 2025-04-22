@@ -62,7 +62,6 @@ python script.py 'foo=[1,2,3]'  # list of ints
 python script.py 'foo=(1+3 * (2 ** 3))' # arbitrary python expression (uses eval())
 
 python script.py baz=1 # will crash, field does not exist
-python script.py +baz=1 # adds a new field
 ```
 
 ## Method Calling
