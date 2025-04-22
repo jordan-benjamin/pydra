@@ -164,8 +164,14 @@ class BaseWrapper(Generic[T]):
         self.d[key] = value
 
 
-class DataclassWrapper(BaseWrapper):
-    def __init__(self, wrapped_type: type["DataclassInstance"]):
+if TYPE_CHECKING:
+    DataclassInstanceT = TypeVar("DataclassInstanceT", bound=DataclassInstance)
+else:
+    DataclassInstanceT = TypeVar("DataclassInstanceT")
+
+
+class DataclassWrapper(BaseWrapper[DataclassInstanceT]):
+    def __init__(self, wrapped_type: type["DataclassInstanceT"]):
         param_dict = {}
         for field in fields(wrapped_type):
             if field.default is not MISSING:
@@ -179,11 +185,11 @@ class DataclassWrapper(BaseWrapper):
         self.__dict__["wrapped_type"] = wrapped_type
 
 
-T = TypeVar("T", bound=BaseModel)
+BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
-class PydanticWrapper(BaseWrapper[T]):
-    def __init__(self, wrapped_type: type[T]):
+class PydanticWrapper(BaseWrapper[BaseModelT]):
+    def __init__(self, wrapped_type: type[BaseModelT]):
         param_dict = {}
         for field_name, field_info in wrapped_type.model_fields.items():
             if field_info.default is not None:
