@@ -257,5 +257,28 @@ class TestRequiredConfig(unittest.TestCase):
         self.assertEqual(self.conf.final_val, 11)
 
 
+class InnerConfig(Config):
+    a: int = 1
+    b: int = 2
+
+    def inner_method(self):
+        self.a = 3
+
+
+class OuterConfig(Config):
+    def __init__(self):
+        super().__init__()
+        self.inner = InnerConfig()
+
+
+class TestNestedConfig(unittest.TestCase):
+    def setUp(self):
+        self.conf = OuterConfig()
+
+    def test_nested_methods(self):
+        apply_overrides(self.conf, [".inner.inner_method"])
+        self.assertEqual(self.conf.inner.a, 3)
+
+
 if __name__ == "__main__":
     unittest.main()
