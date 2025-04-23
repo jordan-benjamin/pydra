@@ -91,7 +91,7 @@ def apply_overrides(
         config._enforce_required()
 
     if finalize:
-        config.finalize()
+        config._recursive_finalize()
 
     return parsed_args.show
 

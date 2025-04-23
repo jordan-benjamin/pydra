@@ -1,7 +1,7 @@
 import inspect
 from pathlib import Path
 from types import NoneType, UnionType
-from typing import Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 from pydra.utils import REQUIRED, DataclassWrapper, save_dill, save_pickle, save_yaml
 
@@ -17,7 +17,6 @@ def get_annotations(cls: type) -> dict:
 
 
 ANNOTATIONS_INITIALIZED = "_annotations_initialized"
-
 
 class Config:
     def __init__(self):
@@ -61,6 +60,21 @@ class Config:
                 value = ann_type(value)
 
         setattr(self, key, value)
+
+    def _recursive_finalize(self):
+        for k, v in self.__dict__.items():
+            if isinstance(v, Config):
+                v._recursive_finalize()
+            elif isinstance(v, (list, tuple)):
+                for x in v:
+                    if isinstance(x, Config):
+                        x._recursive_finalize()
+            elif isinstance(v, dict):
+                for k2, v2 in v.items():
+                    if isinstance(v2, Config):
+                        v2._recursive_finalize()
+
+        self.finalize()
 
     def finalize(self):
         pass
