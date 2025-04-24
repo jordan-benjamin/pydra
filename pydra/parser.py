@@ -51,15 +51,17 @@ def drop_first_last(value: str) -> str:
 
 
 def parse_value(value: str) -> Any:
-    # Python expressions inside curly braces
+    
+    # --- AST-based Python parsing for curly-brace expressions ---
     if value.startswith("{") and value.endswith("}"):
         expr = value[1:-1]
         try:
-            # safe literal eval first
+            # safely parse Python literals
             return ast.literal_eval(expr)
         except Exception:
-            # fallback to full eval
             return eval(expr)
+    # ----------------------------------------------------------------
+
     if is_string_literal(value):
         return drop_first_last(value)
     elif isint(value):
@@ -140,7 +142,24 @@ def parse(args: List[str]) -> ParseResult:
             else:
                 commands.append(MethodCall(method_name=arg[1:]))
         else:
-            # assignment
             commands.append(Assignment(kv_pair=parse_kv_pair(arg, current_scope)))
         index += 1
     return ParseResult(show=show, commands=commands)
+
+
+
+if __name__ == "__main__":
+    demo_args = [
+        "--show",
+        "x=10",
+        "y={1, 2, 3}",
+        "--in", "scope",
+        "nested_val={ {'a': 1, 'b': [4,5]} }",
+        "in--",
+        ".print()",
+        "--list", "nums", "1", "2", "{3+4}", "list--"
+    ]
+    result = parse(demo_args)
+    print("Show flag:", result.show)
+    for cmd in result.commands:
+        print(cmd)
