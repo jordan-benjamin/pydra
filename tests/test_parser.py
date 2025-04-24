@@ -146,6 +146,15 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_curly_brace_set_assignment(self):
+        args = ["key={1,2,3}"]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value={1, 2, 3}))],
+        )
+        self.assertEqual(result, expected)
+
     def test_method_call_no_args(self):
         args = [".method"]
         result = parse(args)

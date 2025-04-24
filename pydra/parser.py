@@ -51,15 +51,12 @@ def drop_first_last(value: str) -> str:
 
 
 def parse_value(value: str) -> Any:
-    
     # --- AST-based Python parsing for curly-brace expressions ---
     if value.startswith("{") and value.endswith("}"):
-        expr = value[1:-1]
         try:
-            # safely parse Python literals
-            return ast.literal_eval(expr)
+            return ast.literal_eval(value)
         except Exception:
-            return eval(expr)
+            return eval(value)
     # ----------------------------------------------------------------
 
     if is_string_literal(value):
@@ -142,11 +139,10 @@ def parse(args: List[str]) -> ParseResult:
             else:
                 commands.append(MethodCall(method_name=arg[1:]))
         else:
+            # assignment
             commands.append(Assignment(kv_pair=parse_kv_pair(arg, current_scope)))
         index += 1
     return ParseResult(show=show, commands=commands)
-
-
 
 if __name__ == "__main__":
     demo_args = [
