@@ -104,9 +104,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]))
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]))],
         )
         self.assertEqual(result, expected)
 
@@ -155,6 +153,48 @@ class TestParseFunction(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    # AST-specific tests to validate curly-brace parsing
+    def test_curly_brace_dict_assignment(self):
+        args = ["settings={'a':1, 'b':2}"]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[Assignment(kv_pair=KeyValuePair(key="settings", value={'a': 1, 'b': 2}))],
+        )
+        self.assertEqual(result, expected)
+
+    def test_curly_brace_list_fallback(self):
+        # literal_eval fails, eval returns list
+        args = ["items={[5,6,7]}"]
+        result = parse(args)
+        expected = ParseResult(
+            show=False,
+            commands=[Assignment(kv_pair=KeyValuePair(key="items", value=[5, 6, 7]))],
+        )
+        self.assertEqual(result, expected)
+
+    def test_curly_brace_comprehension(self):
+        args = ["evens={i*2 for i in range(3)}"]
+        result = parse(args)
+        self.assertEqual(result.commands[0].kv_pair.value, {0, 2, 4})
+
+    def test_curly_brace_invalid_returns_raw(self):
+        args = ["foo={not valid python}"]
+        result = parse(args)
+        self.assertEqual(result.commands[0].kv_pair.value, "{not valid python}")
+
+    def test_method_call_with_brace_arg(self):
+        args = [".configure(path='{usr/bin}', opts={'x':10})"]
+        result = parse(args)
+        mc = result.commands[0]
+        self.assertEqual(mc.kwargs['path'], '{usr/bin}')
+        self.assertEqual(mc.kwargs['opts'], {'x': 10})
+
+    def test_list_with_brace_elements(self):
+        args = ["key=[1,{2,3},4]"]
+        result = parse(args)
+        self.assertEqual(result.commands[0].kv_pair.value, [1, {2, 3}, 4])
+
     def test_method_call_no_args(self):
         args = [".method"]
         result = parse(args)
@@ -166,13 +206,11 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                MethodCall(
-                    method_name="method",
-                    args=["pos1"],
-                    kwargs={"key1": "val1", "key2": 123},
-                )
-            ],
+            commands=[MethodCall(
+                method_name="method",
+                args=["pos1"],
+                kwargs={"key1": "val1", "key2": 123},
+            )],
         )
         self.assertEqual(result, expected)
 
@@ -190,9 +228,7 @@ class TestParseFunction(unittest.TestCase):
         result = parse(args)
         expected = ParseResult(
             show=False,
-            commands=[
-                Assignment(kv_pair=KeyValuePair(key="key", value=["value1", "value2"]))
-            ],
+            commands=[Assignment(kv_pair=KeyValuePair(key="key", value=["value1", "value2"]))],
         )
         self.assertEqual(result, expected)
 
@@ -232,9 +268,7 @@ class TestParseFunction(unittest.TestCase):
                 Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key3", value=45.67)),
                 Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key4", value=True)),
                 Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key5", value=None)),
-                Assignment(
-                    kv_pair=KeyValuePair(key="scope1.scope2.key6", value=[1, 2, 3])
-                ),
+                Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key6", value=[1, 2, 3])),
                 Assignment(kv_pair=KeyValuePair(key="scope1.scope2.key7", value=9)),
                 Assignment(kv_pair=KeyValuePair(key="scope1.key8", value=False)),
                 Assignment(kv_pair=KeyValuePair(key="key9", value=["val1", "val2"])),

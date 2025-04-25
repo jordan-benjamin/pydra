@@ -22,7 +22,29 @@ class ParseResult:
     show: bool
     commands: List[Union[Assignment, MethodCall]]
 
-# builtin functions don't handle whitespace
+def split_top_level(s: str) -> List[str]:
+    parts = []
+    current = []
+    depth = 0
+    brackets = {'(': ')', '[': ']', '{': '}'}
+    opens = brackets.keys()
+    closes = brackets.values()
+    matching = {v: k for k, v in brackets.items()}
+    for char in s:
+        if char in opens:
+            depth += 1
+        elif char in closes:
+            depth -= 1
+        if char == ',' and depth == 0:
+            parts.append(''.join(current))
+            current = []
+        else:
+            current.append(char)
+    if current:
+        parts.append(''.join(current))
+    return parts
+
+# builtin helpers
 def isfloat(value: str) -> bool:
     try:
         float(value)
@@ -40,10 +62,7 @@ def isint(value: str) -> bool:
 
 
 def is_string_literal(value: str) -> bool:
-    for char in ['"', "'"]:
-        if value.startswith(char) and value.endswith(char):
-            return True
-    return False
+    return (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'"))
 
 
 def drop_first_last(value: str) -> str:
@@ -53,11 +72,28 @@ def drop_first_last(value: str) -> str:
 def parse_value(value: str) -> Any:
     # --- AST-based Python parsing for curly-brace expressions ---
     if value.startswith("{") and value.endswith("}"):
+        full = value
+        inner = value[1:-1]
+        # 1. full literal (set, dict)
         try:
-            return ast.literal_eval(value)
+            return ast.literal_eval(full)
+        except (ValueError, SyntaxError, TypeError):
+            pass
+        # 2. eval on full (for comprehensions)
+        try:
+            return eval(full)
         except Exception:
-            return eval(value)
-    # ----------------------------------------------------------------
+            pass
+        # 3. literal_eval on inner (fallback to list/dict literal)
+        try:
+            return ast.literal_eval(inner)
+        except (ValueError, SyntaxError, TypeError):
+            pass
+        # 4. eval on inner (expressions)
+        try:
+            return eval(inner)
+        except Exception:
+            return value
 
     if is_string_literal(value):
         return drop_first_last(value)
@@ -75,10 +111,14 @@ def parse_value(value: str) -> Any:
         between = drop_first_last(value)
         if not between:
             return []
-        return [parse_value(x.strip()) for x in between.split(",")]
+        items = split_top_level(between)
+        return [parse_value(x.strip()) for x in items]
     elif value.startswith("(") and value.endswith(")"):
         inner = drop_first_last(value)
-        return eval(inner)
+        try:
+            return eval(inner)
+        except Exception:
+            return inner
     else:
         return value
 
@@ -106,7 +146,6 @@ def parse(args: List[str]) -> ParseResult:
         if arg == "--show":
             show = True
         elif arg == "--list":
-            # next item is key
             key = args[index + 1]
             index += 2
             items: List[Any] = []
@@ -124,25 +163,27 @@ def parse(args: List[str]) -> ParseResult:
             if "(" in arg and arg.endswith(")"):
                 name = arg[1:arg.index("(")]
                 contents = arg[arg.index("(") + 1 : -1]
-                parts = [p.strip() for p in contents.split(",") if p.strip()]
+                parts = split_top_level(contents)
                 m_args: List[Any] = []
                 m_kwargs: Dict[str, Any] = {}
-                for part in parts:
+                for part in [p.strip() for p in parts if p.strip()]:
                     if "=" in part:
                         kv = parse_kv_pair(part, [])
                         m_kwargs[kv.key] = kv.value
                     else:
                         if m_kwargs:
-                            raise ValueError(f"Positional argument {part} after keyword arguments in method {name}")
+                            raise ValueError(
+                                f"Positional argument {part} after keyword arguments in method {name}"
+                            )
                         m_args.append(parse_value(part))
                 commands.append(MethodCall(method_name=name, args=m_args, kwargs=m_kwargs))
             else:
                 commands.append(MethodCall(method_name=arg[1:]))
         else:
-            # assignment
             commands.append(Assignment(kv_pair=parse_kv_pair(arg, current_scope)))
         index += 1
     return ParseResult(show=show, commands=commands)
+
 
 if __name__ == "__main__":
     demo_args = [
