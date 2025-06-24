@@ -68,7 +68,7 @@ def apply_overrides(
     args: list[str],
     enforce_required: bool = True,
     finalize: bool = True,
-) -> bool:
+) -> tuple[bool, bool]:
     parsed_args = pydra.parser.parse(args)
 
     for command in parsed_args.commands:
@@ -93,7 +93,7 @@ def apply_overrides(
     if finalize:
         config._recursive_finalize()
 
-    return parsed_args.show
+    return parsed_args.show, parsed_args.help
 
 
 # SE (02/24/25): Using the old generic class syntax for compatibility with Python <3.12
@@ -109,7 +109,14 @@ def _apply_overrides_and_call(
     if args is None:
         args = sys.argv[1:]
 
-    show = apply_overrides(config, args, finalize=True)
+    # Check if help is requested first, without validation
+    parsed_args = pydra.parser.parse(args)
+    if parsed_args.help:
+        from pydra.utils import generate_help_text
+        print(generate_help_text(config_t))
+        return
+
+    show, help_requested = apply_overrides(config, args, finalize=True)
 
     if show:
         print(yaml.dump(config.to_dict(), sort_keys=True))

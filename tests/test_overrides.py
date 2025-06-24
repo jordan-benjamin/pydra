@@ -22,15 +22,17 @@ class TestOverrides(unittest.TestCase):
 
     def test_empty_args(self):
         args = []
-        show = apply_overrides(self.conf, args)
+        show, help_requested = apply_overrides(self.conf, args)
         self.assertFalse(show)
+        self.assertFalse(help_requested)
         self.assertEqual(self.conf.foo1, 1)
         self.assertEqual(self.conf.foo2, "two")
 
     def test_basic(self):
         args = ["foo1=12", "foo2=hi"]
-        show = apply_overrides(self.conf, args)
+        show, help_requested = apply_overrides(self.conf, args)
         self.assertFalse(show)
+        self.assertFalse(help_requested)
         self.assertEqual(self.conf.foo1, 12)
         self.assertEqual(self.conf.foo2, "hi")
 
@@ -48,8 +50,9 @@ class TestOverrides(unittest.TestCase):
 
     def test_show_flag(self):
         args = ["foo1=12", "--show", "foo2=three"]
-        show = apply_overrides(self.conf, args)
+        show, help_requested = apply_overrides(self.conf, args)
         self.assertTrue(show)
+        self.assertFalse(help_requested)
 
     def test_method_call(self):
         args = [".bar1"]

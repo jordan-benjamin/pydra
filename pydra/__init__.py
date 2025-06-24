@@ -3,6 +3,7 @@ from pydra.config import REQUIRED, Config
 from pydra.utils import (
     DataclassWrapper,
     PydanticWrapper,
+    generate_help_text,
     load_binary,
     load_dill,
     load_pickle,
@@ -19,6 +20,7 @@ __all__ = [
     "Alias",
     "Config",
     "REQUIRED",
+    "generate_help_text",
     "load_dill",
     "load_pickle",
     "load_yaml",

@@ -201,3 +201,147 @@ class PydanticWrapper(BaseWrapper[BaseModelT]):
 
         self.__dict__["d"] = param_dict
         self.__dict__["wrapped_type"] = wrapped_type
+
+
+def generate_help_text(config_class) -> str:
+    """Generate help text for a Config class by inspecting its structure."""
+    from pydra.config import Config, get_annotations
+    import inspect
+    
+    def format_value(val):
+        if val is REQUIRED:
+            return "REQUIRED"
+        elif val is None:
+            return "None"
+        elif isinstance(val, str):
+            return f'"{val}"'
+        elif isinstance(val, (list, tuple)):
+            return str(val)
+        elif isinstance(val, dict):
+            return str(val)
+        else:
+            return str(val)
+    
+    def collect_config_info(config_obj, prefix=""):
+        """Recursively collect information about config fields."""
+        info = []
+        annotations = get_annotations(config_obj.__class__)
+        
+        for attr_name in dir(config_obj):
+            if attr_name.startswith('_'):
+                continue
+                
+            try:
+                attr_value = getattr(config_obj, attr_name)
+            except:
+                continue
+                
+            # Skip methods that aren't part of the config
+            if callable(attr_value):
+                # Skip built-in methods and finalize
+                built_in_methods = {'finalize', 'save_dill', 'save_pickle', 'save_yaml', 'to_dict', '_enforce_required', '_recursive_finalize', '_assign_maybe_cast'}
+                if attr_name in built_in_methods or attr_name.startswith('_'):
+                    continue
+                    
+                if hasattr(config_obj.__class__, attr_name):
+                    method = getattr(config_obj.__class__, attr_name)
+                    if inspect.isfunction(method) or inspect.ismethod(method):
+                        try:
+                            sig = inspect.signature(method)
+                            params = list(sig.parameters.keys())[1:]  # Skip 'self'
+                            if params:
+                                param_str = f"({', '.join(params)})"
+                            else:
+                                param_str = "()"
+                            full_name = f"{prefix}.{attr_name}{param_str}" if prefix else f".{attr_name}{param_str}"
+                            info.append((full_name, "method", "Call this method"))
+                        except:
+                            pass
+                continue
+            
+            # Skip built-in attributes that aren't actual config fields
+            built_in_attrs = {'finalize', 'save_dill', 'save_pickle', 'save_yaml', 'to_dict', '_enforce_required', '_recursive_finalize', '_assign_maybe_cast', '_init_annotations'}
+            if attr_name in built_in_attrs or attr_name.startswith('_'):
+                continue
+            
+            # Handle config fields
+            full_name = f"{prefix}.{attr_name}" if prefix else attr_name
+            
+            # Get type annotation if available
+            type_info = ""
+            if attr_name in annotations:
+                type_info = f" ({annotations[attr_name].__name__})"
+            
+            # Handle nested configs
+            if isinstance(attr_value, Config):
+                info.append((full_name, "config", f"Nested configuration{type_info}"))
+                info.extend(collect_config_info(attr_value, full_name))
+            elif isinstance(attr_value, (DataclassWrapper, PydanticWrapper)):
+                info.append((full_name, "wrapper", f"Wrapped object: {attr_value.wrapped_type.__name__}{type_info}"))
+                # Add wrapper fields
+                for field_name, field_value in attr_value.d.items():
+                    field_full_name = f"{full_name}.{field_name}"
+                    info.append((field_full_name, "field", f"Default: {format_value(field_value)}{type_info}"))
+            elif isinstance(attr_value, dict):
+                info.append((full_name, "dict", f"Dictionary, default: {format_value(attr_value)}{type_info}"))
+            else:
+                info.append((full_name, "field", f"Default: {format_value(attr_value)}{type_info}"))
+        
+        return info
+    
+    # Create temporary instance to inspect
+    try:
+        temp_config = config_class()
+    except Exception as e:
+        return f"Error creating config instance for help: {e}"
+    
+    config_info = collect_config_info(temp_config)
+    
+    if not config_info:
+        return f"No configurable options found for {config_class.__name__}"
+    
+    # Format the help text
+    lines = [f"Configuration options for {config_class.__name__}:", ""]
+    
+    # Group by type
+    fields = [item for item in config_info if item[1] == "field"]
+    methods = [item for item in config_info if item[1] == "method"]
+    configs = [item for item in config_info if item[1] in ["config", "wrapper"]]
+    dicts = [item for item in config_info if item[1] == "dict"]
+    
+    if fields:
+        lines.append("Fields:")
+        for name, _, desc in fields:
+            lines.append(f"  {name:<30} {desc}")
+        lines.append("")
+    
+    if dicts:
+        lines.append("Dictionaries:")
+        for name, _, desc in dicts:
+            lines.append(f"  {name:<30} {desc}")
+        lines.append("")
+    
+    if configs:
+        lines.append("Nested configurations:")
+        for name, _, desc in configs:
+            lines.append(f"  {name:<30} {desc}")
+        lines.append("")
+    
+    if methods:
+        lines.append("Available methods:")
+        for name, _, desc in methods:
+            lines.append(f"  {name:<30} {desc}")
+        lines.append("")
+    
+    lines.extend([
+        "Usage examples:",
+        "  python script.py field_name=value",
+        "  python script.py nested.field=value",
+        "  python script.py .method_name",
+        "  python script.py .method_name(arg1,arg2)",
+        "  python script.py --list field_name val1 val2 list--",
+        "  python script.py --show  # Display final configuration",
+        ""
+    ])
+    
+    return "\n".join(lines)
