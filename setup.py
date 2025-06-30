@@ -9,9 +9,12 @@ if __name__ == "__main__":
     readme_path = Path(__file__).parent / "README.md"
     long_description = readme_path.read_text()
 
+    version_path = Path(__file__).parent / "version.txt"
+    version = version_path.read_text().strip()
+
     setup(
         name="pydra-config",
-        version="0.0.15",
+        version=version,
         packages=["pydra"],
         author="Jordan Juravsky",
         url="https://github.com/jordan-benjamin/pydra",

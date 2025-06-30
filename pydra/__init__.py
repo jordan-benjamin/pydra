@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydra.cli import Alias, apply_overrides, main, run
 from pydra.config import REQUIRED, Config
 from pydra.utils import (
@@ -11,6 +13,10 @@ from pydra.utils import (
     save_pickle,
     save_yaml,
 )
+
+version_file = Path(__file__).parent.parent / "version.txt"
+__version__ = version_file.read_text().strip()
+
 
 __all__ = [
     "main",
@@ -29,5 +35,3 @@ __all__ = [
     "DataclassWrapper",
     "PydanticWrapper",
 ]
-
-__version__ = "0.0.15"
