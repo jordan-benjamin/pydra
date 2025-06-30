@@ -35,7 +35,7 @@ class TestOverrides(unittest.TestCase):
         self.assertEqual(self.conf.foo2, "hi")
 
     def test_lists(self):
-        args = ["foo1=[T,2,a]", "foo2=[a,None,1.0]"]
+        args = ["foo1=[True,2,'a']", "foo2=['a',None,1.0]"]
         apply_overrides(self.conf, args)
         self.assertEqual(self.conf.foo1, [True, 2, "a"])
         self.assertEqual(self.conf.foo2, ["a", None, 1.0])

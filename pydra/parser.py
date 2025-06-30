@@ -1,3 +1,4 @@
+import ast
 from dataclasses import dataclass, field
 from typing import Any, Union
 
@@ -26,59 +27,33 @@ class ParseResult:
     commands: list[Union[Assignment, MethodCall]]
 
 
-# builtin functions don't handle whitespace
-def isfloat(value: str):
-    try:
-        float(value)
-        return True
-    except ValueError:
-        return False
-
-
-def isint(value: str):
-    try:
-        int(value)
-        return True
-    except ValueError:
-        return False
-
-
-def is_string_literal(value: str):
-    for char in ['"', "'"]:
-        if value.startswith(char) and value.endswith(char):
-            return True
-    return False
-
-
-def drop_first_last(value: str):
-    return value[1:-1]
+def is_surrounded_by(value: str, left: str, right: str):
+    return value.startswith(left) and value.endswith(right)
 
 
 def parse_value(value: str):
-    if is_string_literal(value):
-        return drop_first_last(value)
-    elif isint(value):
-        return int(value)
-    elif isfloat(value):
-        return float(value)
-    elif value in ["None"]:
-        return None
-    elif value in ["T", "True"]:
+    # Handle boolean shortcuts
+    if value == "T":
         return True
-    elif value in ["F", "False"]:
+    elif value == "F":
         return False
-    elif value.startswith("[") and value.endswith("]"):
-        between_brackets = drop_first_last(value)
 
-        if len(between_brackets) == 0:
-            return []
-        else:
-            return [parse_value(x) for x in between_brackets.split(",")]
-    elif value.startswith("(") and value.endswith(")"):
-        sliced = drop_first_last(value)
-        return eval(sliced)
+    # Handle expressions in parentheses using eval.
+    elif is_surrounded_by(value, "(", ")"):
+        return eval(value[1:-1])
     else:
-        return value
+        try:
+            return ast.literal_eval(value)
+        except Exception:
+            # Special case: when passed something like foo=[1,2,a], we probably
+            # want this to crash, since the user probably wants a parse result
+            # of [1,2,'a'] (which you can get with foo="[1,2,'a']" syntax),
+            # not a parsed string literal "[1,2,a]". The same goes for dicts and sets.
+            if is_surrounded_by(value, "[", "]") or is_surrounded_by(value, "{", "}"):
+                raise ValueError(f"Couldn't parse collection: '{value}'")
+
+            # default to just returning the string
+            return value
 
 
 def scope_key(scope: list[str], key: str):

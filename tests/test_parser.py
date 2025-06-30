@@ -100,12 +100,12 @@ class TestParseFunction(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_list_assignment(self):
-        args = ['key=[1,hi,"3"]']
+        args = ['key=[1,"3",None]']
         result = parse(args)
         expected = ParseResult(
             show=False,
             commands=[
-                Assignment(kv_pair=KeyValuePair(key="key", value=[1, "hi", "3"]))
+                Assignment(kv_pair=KeyValuePair(key="key", value=[1, "3", None]))
             ],
         )
         self.assertEqual(result, expected)
