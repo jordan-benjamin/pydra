@@ -14,7 +14,7 @@ from pydra.utils import (
     save_yaml,
 )
 
-version_file = Path(__file__).parent.parent / "version.txt"
+version_file = Path(__file__).parent / "version.txt"
 __version__ = version_file.read_text().strip()
 
 

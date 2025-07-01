@@ -9,7 +9,7 @@ if __name__ == "__main__":
     readme_path = Path(__file__).parent / "README.md"
     long_description = readme_path.read_text()
 
-    version_path = Path(__file__).parent / "version.txt"
+    version_path = Path(__file__).parent / "pydra" / "version.txt"
     version = version_path.read_text().strip()
 
     setup(
