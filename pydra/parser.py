@@ -24,7 +24,12 @@ class Assignment:
 @dataclass
 class ParseResult:
     show: bool
-    commands: list[Union[Assignment, MethodCall]]
+    help: bool = False
+    commands: list[Union[Assignment, MethodCall]] = None
+    
+    def __post_init__(self):
+        if self.commands is None:
+            self.commands = []
 
 
 def is_surrounded_by(value: str, left: str, right: str):
@@ -76,6 +81,7 @@ def parse_kv_pair(kv_pair_arg: str, scope: list[str]) -> KeyValuePair:
 def parse(args) -> ParseResult:
     current_scope = []
     show = False
+    help = False
     index = 0
 
     commands = []
@@ -84,6 +90,8 @@ def parse(args) -> ParseResult:
         arg = args[index]
         if arg == "--show":
             show = True
+        elif arg == "--help":
+            help = True
         elif arg == "--list":
             assert args[index + 1] != "list--"
 
@@ -140,4 +148,4 @@ def parse(args) -> ParseResult:
             )
 
         index += 1
-    return ParseResult(show=show, commands=commands)
+    return ParseResult(show=show, help=help, commands=commands)
